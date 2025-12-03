@@ -1,4 +1,4 @@
-import { DeviceStatus } from "@/lib/api";
+import { DeviceStatus } from "../lib/api";
 import { ScoreBadge } from "./ScoreBadge";
 import React from "react";
 
