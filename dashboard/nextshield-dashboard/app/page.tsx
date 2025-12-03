@@ -18,6 +18,7 @@ export default function HomePage() {
   }, []);
 
   const onPrimary = () => {
+    console.log("auth", authed);
     if (authed) router.push("/admin");
     else router.push("/login");
   };

@@ -1,114 +1,150 @@
 "use client";
 import React from "react";
-import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { DomainFilter } from "../../components/DomainFilter";
+import { DataTable } from "../../components/DataTable";
 import { supabase } from "../../lib/client";
-import logo from "../../../public/logo.jpg";
-import background from "../../../public/logo1.jpg";
-export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [pass, setPass] = useState("");
-  const [err, setErr] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [isSignup, setIsSignup] = useState(false);
-  const router = useRouter();
 
-  const onSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setErr("");
-    setLoading(true);
+const dummy = [
+  {
+    device_id: "device-001",
+    user_id: "Arjun",
+    domain: "exam",
+    last_seen: new Date().toISOString(),
+    ssid: "KIIT-DU",
+    interface_name: "Wi-Fi",
+    signal_percent: 24,
+    avg_ping_ms: 302,
+    experience_score: 28,
+  },
+  {
+    device_id: "device-002",
+    user_id: "Riya",
+    domain: "remote-work",
+    last_seen: new Date().toISOString(),
+    ssid: "JioFiber-5G",
+    interface_name: "Wi-Fi",
+    signal_percent: 81,
+    avg_ping_ms: 26,
+    experience_score: 92,
+  },
+  {
+    device_id: "device-003",
+    user_id: "Sagar",
+    domain: "telemedicine",
+    last_seen: new Date().toISOString(),
+    ssid: "Airtel-Xtreme",
+    interface_name: "Wi-Fi",
+    signal_percent: 56,
+    avg_ping_ms: 118,
+    experience_score: 63,
+  },
+  {
+    device_id: "device-004",
+    user_id: "Neha",
+    domain: "exam",
+    last_seen: new Date().toISOString(),
+    ssid: "Esperance",
+    interface_name: "Wi-Fi",
+    signal_percent: 39,
+    avg_ping_ms: 211,
+    experience_score: 44,
+  },
+];
 
-    if (isSignup) {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password: pass,
-      });
-      setLoading(false);
-      if (error) {
-        setErr(error.message);
-        return;
-      }
-      router.push("/admin");
-      return;
-    }
+export default function Admin() {
+  const [filter, setFilter] = useState("all");
+  const [query, setQuery] = useState("");
+  const [checking, setChecking] = useState(true);
+  const [authed, setAuthed] = useState(false);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password: pass,
-    });
-    setLoading(false);
-    if (error) {
-      setErr(error.message);
-      return;
-    }
-    router.push("/admin");
-  };
+  useEffect(() => {
+    const run = async () => {
+      const { data } = await supabase.auth.getUser();
+      setAuthed(!!data.user);
+      setChecking(false);
+    };
+    run();
+  }, []);
+
+  const data = useMemo(
+    () =>
+      dummy
+        .filter((d) =>
+          filter === "all" ? true : d.domain?.toLowerCase() === filter
+        )
+        .filter((d) => {
+          if (!query.trim()) return true;
+          const q = query.toLowerCase();
+          return (
+            d.device_id.toLowerCase().includes(q) ||
+            d.user_id?.toLowerCase().includes(q) ||
+            d.ssid?.toLowerCase().includes(q)
+          );
+        }),
+    [filter, query]
+  );
+
+  if (checking)
+    return (
+      <main className="min-h-screen bg-[#020617] flex items-center justify-center text-slate-300 text-sm">
+        Checking access…
+      </main>
+    );
+
+  if (!authed)
+    return (
+      <main className="min-h-screen bg-[#020617] flex items-center justify-center text-slate-300 text-sm">
+        <div className="text-center space-y-2">
+          <p>Unauthorized. Please sign in to access the admin console.</p>
+          <a
+            href="/login"
+            className="inline-flex px-3 py-1 rounded-md bg-emerald-500/90 text-slate-900 text-xs font-semibold hover:bg-emerald-400"
+          >
+            Go to login
+          </a>
+        </div>
+      </main>
+    );
 
   return (
-    <main className="min-h-screen bg-[#020617] flex items-center justify-center px-4">
-      <div className="w-full max-w-sm rounded-2xl border border-slate-800 bg-slate-900/80 p-6 shadow-[0_0_20px_#00ffbf20]">
-        <div className="flex items-center justify-between mb-4">
+    <main className="min-h-screen bg-[#020617] text-slate-100 flex justify-center px-6 py-10">
+      <div className="w-full max-w-7xl space-y-6">
+        <header className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-semibold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-              NetShield Admin {isSignup ? "Signup" : "Login"}
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+              WifiShield Network Intelligence Console
             </h1>
-            <p className="text-xs text-slate-400">
-              Restricted access for admin console
+            <p className="text-slate-400 text-sm">
+              Real-time telemetry & performance scoring across connected devices
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              setErr("");
-              setIsSignup((v) => !v);
-            }}
-            className="text-[11px] text-emerald-300 hover:text-emerald-200"
-          >
-            {isSignup ? "Have an account?" : "Create account"}
-          </button>
+          <div className="text-right text-xs text-slate-400 space-y-1">
+            <p>{new Date().toLocaleTimeString()}</p>
+            <button
+              onClick={async () => {
+                await supabase.auth.signOut();
+                setAuthed(false);
+              }}
+              className="px-3 py-1 rounded-md border border-slate-700 text-slate-300 hover:bg-slate-800"
+            >
+              Sign out
+            </button>
+          </div>
+        </header>
+
+        <div className="flex flex-wrap justify-between items-center gap-3">
+          <DomainFilter value={filter} onChange={setFilter} />
+          <input
+            type="text"
+            placeholder="Search device, user or SSID"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="w-72 rounded-md border border-slate-700 bg-slate-900 px-3 py-1 text-xs text-slate-100 placeholder:text-slate-500 focus:ring-emerald-500/50 focus:ring-2 outline-none"
+          />
         </div>
-        <form onSubmit={onSubmit} className="space-y-3">
-          <div className="space-y-1">
-            <label className="text-xs text-slate-300">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-slate-100 placeholder:text-slate-500 focus:ring-emerald-500/60 focus:ring-2 outline-none"
-              placeholder="admin@example.com"
-              required
-            />
-          </div>
-          <div className="space-y-1">
-            <label className="text-xs text-slate-300">Password</label>
-            <input
-              type="password"
-              value={pass}
-              onChange={(e) => setPass(e.target.value)}
-              className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-slate-100 placeholder:text-slate-500 focus:ring-emerald-500/60 focus:ring-2 outline-none"
-              placeholder="••••••••"
-              required
-            />
-          </div>
-          {err && (
-            <div className="text-[11px] text-red-300 bg-red-900/40 border border-red-700/60 rounded-md px-2 py-1">
-              {err}
-            </div>
-          )}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full mt-2 rounded-md bg-emerald-500/90 text-slate-900 text-xs font-semibold py-2 hover:bg-emerald-400 disabled:opacity-50"
-          >
-            {loading
-              ? isSignup
-                ? "Creating account..."
-                : "Signing in..."
-              : isSignup
-              ? "Sign up"
-              : "Sign in"}
-          </button>
-        </form>
+
+        <DataTable rows={data} />
       </div>
     </main>
   );
