@@ -11,8 +11,6 @@ export default function HomePage() {
   useEffect(() => {
     const run = async () => {
       const { data } = await supabase.auth.getUser();
-      console.log(data.user);
-      console.log(!!data.user);
       setAuthed(!!data.user);
       setChecking(false);
     };
