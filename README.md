@@ -170,6 +170,8 @@ client/widget/dist/NetShield Setup.exe
 ## 🧑‍💻 About the Author
 
 Built end-to-end by **Akangkha**:
+<br/>
+<br/>
 <a href="https://www.linkedin.com/in/akangkha-sarkar">
     <img src="https://img.shields.io/badge/LinkedIn-Connect-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn" />
  </a>
@@ -184,7 +186,7 @@ Built end-to-end by **Akangkha**:
   * Next.js admin console
   * Supabase auth integration
   * Dockerized backend
-  * 
+  
 
 ---
 
