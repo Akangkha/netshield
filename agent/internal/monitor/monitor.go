@@ -4,27 +4,36 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"os/exec"
-	"time"
 	"netshield/agent/internal/wifi"
+	"os/exec"
+	"sync"
+	"time"
 )
 
-// policy configuration for the monitor.
 type Config struct {
-	MinSignalPercent int           
-	MaxAvgPingMs     int           
-	PingHost         string       
-	CheckInterval    time.Duration 
+	MinSignalPercent  int
+	MaxAvgPingMs      int
+	PingHost          string
+	CheckInterval     time.Duration
 	PreferredProfiles []string
-	OnMetric func(status *wifi.WifiStatus, ping *wifi.SimplePingResult)
 }
 
+type Snapshot struct {
+	SSID        string    `json:"ssid"`
+	Profile     string    `json:"profile"`
+	Signal      int       `json:"signal_percent"`
+	AvgPingMs   int       `json:"avg_ping_ms"`
+	Score       int       `json:"score"`
+	LastUpdated time.Time `json:"last_updated"`
+}
 
 type Monitor struct {
 	Wifi   wifi.Manager
 	Config Config
-}
 
+	mu       sync.RWMutex
+	snapshot Snapshot
+}
 
 func (m *Monitor) Start(ctx context.Context) error {
 	ticker := time.NewTicker(m.Config.CheckInterval)
@@ -42,48 +51,79 @@ func (m *Monitor) Start(ctx context.Context) error {
 	}
 }
 
+func (m *Monitor) GetSnapshot() Snapshot {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.snapshot
+}
 
 func (m *Monitor) checkOnce() error {
 	status, err := m.Wifi.GetCurrentStatus()
 	if err != nil {
 		return fmt.Errorf("get current status: %w", err)
 	}
-	fmt.Println("[monitor] current:", wifi.DebugStatus(status))
+
 	pingRes, err := pingHost(m.Config.PingHost)
 	if err != nil {
 		fmt.Println("[monitor] ping failed:", err)
-	} else {
-		fmt.Printf("[monitor] ping avg: %dms\n", pingRes.AvgMs)
 	}
 
-	if m.Config.OnMetric != nil && pingRes != nil {
-		m.Config.OnMetric(status, pingRes)
+	var avgPing int
+	if pingRes != nil {
+		avgPing = pingRes.AvgMs
 	}
 
-	
+	score := computeScore(status.Signal, avgPing)
+
+	m.mu.Lock()
+	m.snapshot = Snapshot{
+		SSID:        status.SSID,
+		Profile:     status.ProfileName,
+		Signal:      status.Signal,
+		AvgPingMs:   avgPing,
+		Score:       score,
+		LastUpdated: time.Now(),
+	}
+	m.mu.Unlock()
+
 	badSignal := status.Signal > 0 && status.Signal < m.Config.MinSignalPercent
-	badPing := pingRes != nil && pingRes.AvgMs > m.Config.MaxAvgPingMs
+	badPing := avgPing > 0 && avgPing > m.Config.MaxAvgPingMs
 
 	if !badSignal && !badPing {
-		fmt.Println("[monitor] connection healthy, no switch")
 		return nil
 	}
-
-	fmt.Println("[monitor] connection poor, trying failover...")
 
 	return m.tryFailover(status)
 }
 
-
+func computeScore(signal, ping int) int {
+	if signal <= 0 {
+		return 0
+	}
+	if ping <= 0 {
+		return signal
+	}
+	penalty := ping / 5
+	if penalty > 40 {
+		penalty = 40
+	}
+	score := signal - penalty
+	if score < 0 {
+		return 0
+	}
+	if score > 100 {
+		return 100
+	}
+	return score
+}
 func (m *Monitor) tryFailover(current *wifi.WifiStatus) error {
 	profiles, err := m.Wifi.ListProfiles()
 	if err != nil {
 		return fmt.Errorf("list profiles: %w", err)
 	}
 
-	
 	for _, preferredName := range m.Config.PreferredProfiles {
-		
+
 		if preferredName == current.ProfileName || preferredName == current.SSID {
 			continue
 		}
@@ -119,9 +159,6 @@ func (m *Monitor) tryFailover(current *wifi.WifiStatus) error {
 
 	return fmt.Errorf("no suitable alternative profile found or all failed")
 }
-
-
-
 func pingHost(host string) (*wifi.SimplePingResult, error) {
 	cmd := exec.Command("ping", "-n", "3", host)
 	var out bytes.Buffer

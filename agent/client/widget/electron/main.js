@@ -1,7 +1,13 @@
 import { app, BrowserWindow, Tray, Menu, nativeImage } from "electron";
-import { join } from "path";
+import path from "path"; // distinct import
+import { fileURLToPath } from "url";
 
-  const iconPath = join(__dirname, "icon.png");
+// 1. Manually define __filename and __dirname for ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// 2. Define icon path safely
+const iconPath = path.join(__dirname, "icon.ico");
 
 let tray = null;
 let win = null;
@@ -11,28 +17,44 @@ function createWindow() {
     width: 420,
     height: 300,
     resizable: false,
-    frame: false,        
+    frame: false,
     title: "NetShield",
-    icon: iconPath,
+    icon: iconPath, // using the variable defined at top
     autoHideMenuBar: true,
-    alwaysOnTop: true,  
+    alwaysOnTop: true,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
+      webSecurity: false,
     },
   });
 
-  const url ="http://localhost:3000"
- 
+  // 3. LOGIC: Check if Packaged or Dev
+  const isDev = !app.isPackaged;
 
-  win.loadURL(url);
+  if (isDev) {
+    // Dev Mode: Load localhost
+    console.log("Running in DEV mode: Loading localhost");
+    win.loadURL("http://localhost:3000");
+  } else {
+    // Production Mode: Load file from 'out' folder
+    // CHECK THIS PATH: If main.js is in the root, use "out/index.html"
+    // If main.js is in a subfolder, use "../out/index.html"
+    const indexPath = path.join(__dirname, "../out/index.html");
+
+    console.log("Running in PROD mode: Loading file from", indexPath);
+    win.loadFile(indexPath);
+  }
+
+  // REMOVED: win.loadURL(url) <-- This was the error!
+
   win.once("ready-to-show", () => {
     win.show();
   });
 }
 
 function createTray() {
-  const iconPath = join(__dirname, "icon.png");
+  // Use the iconPath we defined at the top
   const trayIcon = nativeImage.createFromPath(iconPath);
 
   tray = new Tray(trayIcon);
@@ -65,7 +87,6 @@ function createTray() {
   ]);
 
   tray.setContextMenu(contextMenu);
-
 
   tray.on("click", () => {
     if (!win) return;

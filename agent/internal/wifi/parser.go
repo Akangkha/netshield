@@ -7,29 +7,30 @@ import (
 	"strings"
 )
 
-
+// ParseProfiles parses `netsh wlan show profiles` output.
 func ParseProfiles(output string) []WifiProfile {
 	var profiles []WifiProfile
 	lines := strings.Split(output, "\n")
 
 	for _, line := range lines {
-		
+		// Example:
+		//    All User Profile     : esperance␠
 		if strings.Contains(line, "All User Profile") {
-		
+			// Keep original line endings trimmed, but don't trim fully.
 			line = strings.TrimRight(line, "\r\n")
 			parts := strings.SplitN(line, ":", 2)
 			if len(parts) != 2 {
 				continue
 			}
 
-	
+			// parts[1] starts with at least one space.
 			raw := parts[1]
 			if len(raw) > 0 && raw[0] == ' ' {
 				raw = raw[1:]
 			}
 
 			profiles = append(profiles, WifiProfile{
-				RawName:   raw,                 
+				RawName:   raw,                 // exact string as seen by Windows (including any trailing spaces)
 				CleanName: strings.TrimSpace(raw),
 			})
 		}
@@ -37,7 +38,7 @@ func ParseProfiles(output string) []WifiProfile {
 	return profiles
 }
 
-
+// ParseCurrentStatus parses `netsh wlan show interfaces` to get current Wi-Fi info.
 func ParseCurrentStatus(output string) *WifiStatus {
 	lines := strings.Split(output, "\n")
 	status := &WifiStatus{}
@@ -47,14 +48,14 @@ func ParseCurrentStatus(output string) *WifiStatus {
 
 		switch {
 		case strings.HasPrefix(line, "Name") && status.InterfaceName == "":
-	
+			// Name                   : Wi-Fi
 			status.InterfaceName = afterColon(line)
 		case strings.HasPrefix(line, "SSID") && !strings.Contains(line, "BSSID"):
 			status.SSID = afterColon(line)
 		case strings.HasPrefix(line, "Profile"):
 			status.ProfileName = afterColon(line)
 		case strings.HasPrefix(line, "Signal"):
-			
+			// Signal                 : 91%
 			raw := afterColon(line)
 			raw = strings.TrimSpace(strings.TrimSuffix(raw, "%"))
 			if v, err := strconv.Atoi(raw); err == nil {
@@ -69,7 +70,7 @@ func ParseCurrentStatus(output string) *WifiStatus {
 	return status
 }
 
-
+// afterColon returns the trimmed substring after the first ':'.
 func afterColon(line string) string {
 	parts := strings.SplitN(line, ":", 2)
 	if len(parts) != 2 {
@@ -78,6 +79,9 @@ func afterColon(line string) string {
 	return strings.TrimSpace(parts[1])
 }
 
+// --- Optional helper for debugging ---
+
+// DebugStatus formats status nicely.
 func DebugStatus(s *WifiStatus) string {
 	if s == nil {
 		return "no wifi status"
@@ -86,13 +90,16 @@ func DebugStatus(s *WifiStatus) string {
 		s.InterfaceName, s.SSID, s.ProfileName, s.Signal)
 }
 
-
+// SimplePingResult holds ping statistics.
 type SimplePingResult struct {
 	AvgMs int
 }
 
-
+// ParsePingOutput parses `ping -n 3 8.8.8.8` output for average time.
 func ParsePingOutput(out string) *SimplePingResult {
+	// Windows format example:
+	// Approximate round trip times in milli-seconds:
+	//     Minimum = 12ms, Maximum = 15ms, Average = 13ms
 	re := regexp.MustCompile(`Average\s*=\s*(\d+)ms`)
 	m := re.FindStringSubmatch(out)
 	if len(m) != 2 {

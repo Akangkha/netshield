@@ -27,7 +27,6 @@ export default function DashboardWidget() {
   const [autoSwitch, setAutoSwitch] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-
   useEffect(() => {
     let cancelled = false;
 
@@ -35,20 +34,21 @@ export default function DashboardWidget() {
       try {
         console.log("Fetching status...");
         const res = await fetchStatus();
-        if (!res || res.length === 0) {
+        if (!res) {
           if (!cancelled) {
             setError("No device reporting yet");
           }
           return;
         }
-        const d = res[0]; 
+        console.log("Dara", res);
+        const d = res;
         if (!cancelled) {
           setError(null);
           setData({
             ssid: d.ssid || "(unknown)",
             signalPercent: d.signal_percent ?? 0,
             avgPingMs: d.avg_ping_ms ?? 0,
-            score: d.experience_score ?? 0,
+            score: d.score ?? 0,
           });
         }
       } catch (e: any) {
@@ -80,7 +80,7 @@ export default function DashboardWidget() {
               Local Wi-Fi health & auto-switch
             </p>
           </div>
-       
+
           <div className="flex gap-1">
             <span className="h-2.5 w-2.5 rounded-full bg-red-500/80" />
             <span className="h-2.5 w-2.5 rounded-full bg-yellow-400/80" />
@@ -89,16 +89,14 @@ export default function DashboardWidget() {
         </header>
 
         <div className="flex gap-4">
-     
           <div className="flex-1 flex flex-col items-center justify-center">
             <div className="relative w-32 h-16 overflow-hidden">
-          
               <div className="absolute inset-0 rounded-t-full border-4 border-slate-800 border-b-0" />
-        
+
               <div className="absolute inset-0 rounded-t-full border-4 border-gradient border-b-0 [border-image:linear-gradient(90deg,#22c55e,#eab308,#ef4444)_1]" />
-     
+
               <div className="absolute bottom-0 left-1/2 h-[2px] w-[2px] -translate-x-1/2 translate-y-1/2 rounded-full bg-slate-300" />
-            
+
               <div
                 className="absolute bottom-0 left-1/2 origin-bottom h-14 w-[2px] -translate-x-1/2 bg-slate-100"
                 style={{ transform: `rotate(${angle}deg)` }}
@@ -112,7 +110,6 @@ export default function DashboardWidget() {
             </div>
           </div>
 
-       
           <div className="flex-1 flex flex-col justify-between">
             <div>
               <div className="text-xs text-slate-400 mb-1">SSID</div>
@@ -143,7 +140,6 @@ export default function DashboardWidget() {
               </div>
             </div>
 
-    
             <div className="mt-3 flex items-center justify-between rounded-xl bg-slate-800/70 px-3 py-2">
               <div>
                 <div className="text-xs font-medium text-slate-100">

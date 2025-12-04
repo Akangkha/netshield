@@ -1,0 +1,125 @@
+]633;D;2]633;P;Cwd=C:/Users/KIIT/OneDrive/Desktop/project/NetSheild]633;E;docker exec -it netshield-postgres psql -U postgres -d netshield -c "SELECT current_user, current_database()\x3b";3fc8652c-3b21-4bc5-8033-9de221a1bce7]633;C[?1049h[22;0;0t[24;1H[?1h= current_user | current_database 
+--------------+------------------
+ postgres     | netshield
+(1 row)
+
+[7m(END)[27m[K[H[2J[H[H[2J[H current_user | current_database 
+--------------+------------------
+ postgres     | netshield
+(1 row)
+
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[7m(END)[27m[KCancel request sent
+[H[2J[H[H[2J[H current_user | current_database 
+--------------+------------------
+ postgres     | netshield
+(1 row)
+
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[7m(END)[27m[KCancel request sent
+[H[2J[H[H[2J[H current_user | current_database 
+--------------+------------------
+ postgres     | netshield
+(1 row)
+
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[7m(END)[27m[KCancel request sent
+[H[2J[H[H[2J[H current_user | current_database 
+--------------+------------------
+ postgres     | netshield
+(1 row)
+
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[7m(END)[27m[KCancel request sent
+[H[2J[H[H[2J[H current_user | current_database 
+--------------+------------------
+ postgres     | netshield
+(1 row)
+
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[1m~[0m
+[7m(END)[27m[KCancel request sent

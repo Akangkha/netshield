@@ -7,11 +7,11 @@ export type DeviceStatus = {
   interface_name: string;
   signal_percent: number;
   avg_ping_ms: number;
-  experience_score: number;
+  score: number;
 };
 
-export async function fetchStatus(): Promise<DeviceStatus[]> {
-  const res = await fetch("/api/status", {
+export async function fetchStatus(): Promise<DeviceStatus> {
+  const res = await fetch("http://localhost:9090/current", {
     cache: "no-store",
   });
 

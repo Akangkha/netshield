@@ -7,10 +7,10 @@ import (
 	"strings"
 )
 
-
+// WifiProfile represents a saved Wi-Fi profile on Windows.
 type WifiProfile struct {
-	RawName   string 
-	CleanName string 
+	RawName   string // exact name as Windows sees it
+	CleanName string // trimmed for display
 }
 
 // WifiStatus represents the current connection info.
@@ -18,19 +18,20 @@ type WifiStatus struct {
 	InterfaceName string
 	SSID          string
 	ProfileName   string
-	Signal        int 
+	Signal        int // percentage 0-100
 }
 
-
+// Manager is an interface so you can swap implementations (Windows, mock, etc.).
 type Manager interface {
 	ListProfiles() ([]WifiProfile, error)
 	GetCurrentStatus() (*WifiStatus, error)
 	Connect(profile WifiProfile) error
 }
 
-
+// WindowsManager implements Manager using `netsh` on Windows.
 type WindowsManager struct{}
 
+// runNetsh executes a netsh command and returns its output as string.
 func (w WindowsManager) runNetsh(args ...string) (string, error) {
 	cmd := exec.Command("netsh", args...)
 	var out bytes.Buffer
@@ -44,7 +45,7 @@ func (w WindowsManager) runNetsh(args ...string) (string, error) {
 	return out.String(), nil
 }
 
-
+// ListProfiles parses `netsh wlan show profiles`.
 func (w WindowsManager) ListProfiles() ([]WifiProfile, error) {
 	out, err := w.runNetsh("wlan", "show", "profiles")
 	if err != nil {
@@ -53,7 +54,7 @@ func (w WindowsManager) ListProfiles() ([]WifiProfile, error) {
 	return ParseProfiles(out), nil
 }
 
-
+// GetCurrentStatus parses `netsh wlan show interfaces`.
 func (w WindowsManager) GetCurrentStatus() (*WifiStatus, error) {
 	out, err := w.runNetsh("wlan", "show", "interfaces")
 	if err != nil {
@@ -66,15 +67,15 @@ func (w WindowsManager) GetCurrentStatus() (*WifiStatus, error) {
 	return status, nil
 }
 
-
+// Connect connects to the given Wi-Fi profile.
 func (w WindowsManager) Connect(profile WifiProfile) error {
-	
+	// Use the raw Windows name to avoid issues with trailing spaces.
 	args := []string{"wlan", "connect", "name=" + profile.RawName}
 	_, err := w.runNetsh(args...)
 	return err
 }
 
-
+// FindProfileByCleanName returns the profile with matching CleanName (case-sensitive).
 func FindProfileByCleanName(profiles []WifiProfile, name string) *WifiProfile {
 	for _, p := range profiles {
 		if strings.TrimSpace(p.CleanName) == strings.TrimSpace(name) {

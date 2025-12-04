@@ -20,10 +20,11 @@ message NetworkMetric {
 }
 
 message ControlMessage {
-  string type  = 1;
+  string type  = 1; // e.g. "LOG", "SET_THRESHOLD"
   string data  = 2;
 }
 
 service AgentService {
+  // Bi-directional streaming: agent sends metrics, server can optionally send control messages.
   rpc StreamMetrics (stream NetworkMetric) returns (stream ControlMessage);
 }

@@ -3,6 +3,22 @@
   "version": "0.1.0",
   "private": true,
   "main": "electron/main.js",
+  "build": {
+    "appId": "com.wifishield.client",
+    "productName": "WifiShield",
+    "directories": {
+      "buildResources": "electron"
+    },
+    "files": [
+      "electron/**/*",
+      "out/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "electron/icon.ico"
+    }
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -10,7 +26,8 @@
     "lint": "eslint",
     "dev:next": "next dev",
     "dev:electron": "wait-on http://localhost:3000 && cross-env NODE_ENV=development electron .",
-    "dev:desktop": "concurrently \"npm run dev:next\" \"npm run dev:electron\""
+    "dev:desktop": "concurrently \"npm run dev:next\" \"npm run dev:electron\"",
+    "build:desktop": "next build && electron-builder -w"
   },
   "dependencies": {
     "next": "16.0.6",
@@ -25,6 +42,7 @@
     "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
     "electron": "^39.2.4",
+    "electron-builder": "^26.0.12",
     "eslint": "^9",
     "eslint-config-next": "16.0.6",
     "tailwindcss": "^4",
